@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Resources\V1\CustomerCollection;
-use App\Http\Resources\V1\CustomerResource;
 use App\Models\Customer;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCustomerRequest;
-use App\Http\Requests\UpdateCustomerRequest;
-use App\Services\Filters\CustomerService;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Services\Filters\CustomerService;
+use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Resources\V1\CustomerResource;
+use App\Http\Requests\UpdateCustomerRequest;
+use App\Http\Resources\V1\CustomerCollection;
 
 class CustomerController extends Controller
 {
@@ -32,7 +33,8 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request)
     {
-        return new CustomerResource(Customer::create($request->all()));
+        $customer = $request->except('postalCode');
+        return new CustomerResource(Customer::create($customer));
     }
 
     /**
@@ -60,7 +62,9 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-
+        if (!auth()->user()->tokenCan('delete')) {
+            abort(403, 'You do not have permission to delete this resource.');
+        }
         return $customer->delete();
     }
 }
